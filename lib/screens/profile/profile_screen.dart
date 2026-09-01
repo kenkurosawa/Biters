@@ -1,61 +1,22 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/app_transaction.dart';
 import '../../models/app_user.dart';
 import '../../services/auth_service.dart';
 import '../../services/fund_service.dart';
-import '../../services/storage_service.dart';
 import '../../state/app_state.dart';
 import '../../utils/currency.dart';
 
 /// Pantalla 16 del PDF: Perfil.
+///
+/// Sin foto de perfil por decisión de producto: Cloud Storage para Firebase
+/// ahora exige el plan Blaze (pago por uso) incluso para uso dentro del
+/// nivel gratuito, y se optó por quedarse 100% en Spark. El avatar se
+/// muestra siempre con las iniciales del nombre.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  Future<void> _cambiarFoto(BuildContext context) async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Sacar foto'),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Elegir de galería'),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (source == null || !context.mounted) return;
-
-    final picked = await ImagePicker().pickImage(source: source, maxWidth: 800, imageQuality: 85);
-    if (picked == null || !context.mounted) return;
-
-    final uid = context.read<AppState>().firebaseUser!.uid;
-    try {
-      final url = await context.read<StorageService>().uploadAvatar(uid: uid, file: File(picked.path));
-      if (context.mounted) {
-        await context.read<FundService>().updateUserProfile(uid, fotoUrl: url);
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo subir la foto. Probá de nuevo.')),
-        );
-      }
-    }
-  }
 
   Future<void> _editarNombre(BuildContext context, String actual) async {
     final ctrl = TextEditingController(text: actual);
@@ -93,32 +54,13 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-                      backgroundImage: appUser.fotoUrl != null ? NetworkImage(appUser.fotoUrl!) : null,
-                      child: appUser.fotoUrl == null
-                          ? Text(
-                              appUser.nombre.isNotEmpty ? appUser.nombre[0].toUpperCase() : '?',
-                              style: theme.textTheme.headlineMedium,
-                            )
-                          : null,
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: InkWell(
-                        onTap: () => _cambiarFoto(context),
-                        child: CircleAvatar(
-                          radius: 12,
-                          backgroundColor: theme.colorScheme.primary,
-                          child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                  child: Text(
+                    appUser.nombre.isNotEmpty ? appUser.nombre[0].toUpperCase() : '?',
+                    style: theme.textTheme.headlineMedium,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

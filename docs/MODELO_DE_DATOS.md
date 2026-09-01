@@ -6,7 +6,7 @@
 |---|---|---|
 | `nombre` | string | editable desde Perfil |
 | `email` | string | de Firebase Auth |
-| `fotoUrl` | string? | `Storage: avatars/{uid}/...` |
+| `fotoUrl` | string? | sin usar en v1 — Storage quedó pausado (requiere plan Blaze); Perfil muestra iniciales |
 | `fechaCreacion` | timestamp | |
 | `fondoPersonalId` | string | fund creado automáticamente al verificar el email |
 | `fondoCompartidoId` | string? | reservado la primera vez que se genera un código de invitación (ver abajo); `null` hasta entonces |

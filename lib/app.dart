@@ -7,7 +7,6 @@ import 'router.dart';
 import 'services/auth_service.dart';
 import 'services/fund_service.dart';
 import 'services/invite_service.dart';
-import 'services/storage_service.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
 
@@ -21,7 +20,6 @@ class BitersApp extends StatelessWidget {
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<FundService>(create: (_) => FundService()),
         Provider<InviteService>(create: (_) => InviteService()),
-        Provider<StorageService>(create: (_) => StorageService()),
         ChangeNotifierProvider<AppState>(
           create: (context) => AppState(
             authService: context.read<AuthService>(),

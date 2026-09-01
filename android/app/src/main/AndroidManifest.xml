@@ -1,9 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Necesario para Firebase Auth/Firestore/Storage en builds release
+    <!-- Necesario para Firebase Auth/Firestore en builds release
          (en debug, Flutter lo agrega automáticamente, pero no en release). -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Para la foto de perfil (ImageSource.camera en Perfil). -->
-    <uses-permission android:name="android.permission.CAMERA"/>
     <application
         android:label="Biters"
         android:name="${applicationName}"

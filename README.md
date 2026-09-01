@@ -97,9 +97,15 @@ Denegar todo por defecto, habilitar caso por caso:
 
 ### Reglas de Storage — resumen
 
-Ver [`firebase/storage.rules`](firebase/storage.rules). Cada usuario solo
-puede escribir en `avatars/{su-propio-uid}/`, con validación de tipo de
-archivo (jpg/png/webp) y tamaño máximo (5 MB).
+Ver [`firebase/storage.rules`](firebase/storage.rules): cada usuario solo
+podría escribir en `avatars/{su-propio-uid}/`, con validación de tipo de
+archivo (jpg/png/webp) y tamaño máximo (5 MB). **Estado actual: la foto de
+perfil está deshabilitada en la v1.** Google ahora exige el plan Blaze
+(pago por uso) para inicializar Cloud Storage for Firebase, incluso para
+uso que se mantiene 100% dentro del nivel gratuito — y se decidió quedarse
+en Spark sin tarjeta cargada. El Perfil muestra un avatar con las iniciales
+del nombre en su lugar. Las reglas ya están listas si en algún momento
+deciden pasar a Blaze y reactivar la función.
 
 ### App Check
 
