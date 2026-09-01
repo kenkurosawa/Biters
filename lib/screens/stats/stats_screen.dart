@@ -38,7 +38,7 @@ class _StatsScreenState extends State<StatsScreen> {
       body: FundGate(
         fundId: fundId,
         emptyState: (_) => const Center(child: Text('Todavía no armaste tu fondo compartido "Couple".')),
-        builder: (_) => SafeArea(
+        builder: (_, _) => SafeArea(
               child: StreamBuilder<List<AppTransaction>>(
                 stream: context.read<FundService>().streamTransactions(fundId!, mesReferencia: mesReferencia),
                 builder: (context, snapshot) {

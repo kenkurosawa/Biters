@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/invite_service.dart';
 import '../../state/app_state.dart';
+import '../../theme/colors.dart';
 
 /// Pantalla 15 del PDF: unirse a un fondo compartido con el código de 6
 /// dígitos.
@@ -41,8 +43,14 @@ class _JoinFundScreenState extends State<JoinFundScreen> {
       _error = null;
     });
     try {
-      final uid = context.read<AppState>().firebaseUser!.uid;
-      await context.read<InviteService>().redeemInvite(codigo: _codigo, joinerUid: uid);
+      final appState = context.read<AppState>();
+      final uid = appState.firebaseUser!.uid;
+      final nombre = appState.appUser?.nombre ?? '';
+      await context.read<InviteService>().redeemInvite(
+            codigo: _codigo,
+            joinerUid: uid,
+            joinerNombre: nombre,
+          );
       if (mounted) Navigator.of(context).pop();
     } on InviteException catch (e) {
       setState(() => _error = e.mensaje);
@@ -78,17 +86,47 @@ class _JoinFundScreenState extends State<JoinFundScreen> {
                 children: [
                   for (var i = 0; i < 6; i++)
                     Container(
-                      width: 44,
-                      height: 56,
+                      width: 46,
+                      height: 58,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       child: TextField(
                         controller: _controllers[i],
                         focusNode: _focusNodes[i],
                         textAlign: TextAlign.center,
+                        textAlignVertical: TextAlignVertical.center,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         maxLength: 1,
-                        style: theme.textTheme.headlineMedium,
-                        decoration: const InputDecoration(counterText: ''),
+                        cursorColor: BitersColors.coral,
+                        style: const TextStyle(
+                          fontFamily: 'SpaceGrotesk',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 24,
+                          color: BitersColors.ink,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: Colors.white,
+                          // El padding grande del tema global (pensado para
+                          // campos de texto normales) achicaba tanto el
+                          // área visible en esta casilla de 46px que el
+                          // dígito quedaba cortado/desplazado — de ahí el
+                          // bug reportado.
+                          contentPadding: EdgeInsets.zero,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: BitersColors.coral, width: 2),
+                          ),
+                        ),
                         onChanged: (v) {
                           if (v.isNotEmpty && i < 5) {
                             FocusScope.of(context).requestFocus(_focusNodes[i + 1]);

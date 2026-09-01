@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/app_transaction.dart';
 import '../../models/app_user.dart';
+import '../../models/fund.dart';
 import '../../services/auth_service.dart';
 import '../../services/fund_service.dart';
 import '../../state/app_state.dart';
@@ -80,26 +80,9 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             if (appUser.fondoCompartidoId != null) ...[
-              Text('Pozo compartido', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              const _MiembroDesdeRow(),
-              const SizedBox(height: 8),
+              _PozoCompartidoSection(fundId: appUser.fondoCompartidoId!, myUid: appUser.uid),
+              const SizedBox(height: 20),
             ],
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.key_rounded, color: theme.colorScheme.primary),
-              title: const Text('Invitar a tu pareja'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/invitar'),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.qr_code_2_rounded, color: theme.colorScheme.primary),
-              title: const Text('Unirme a un fondo'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/unirme'),
-            ),
-            const SizedBox(height: 20),
             Text('Mis fondos', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             _SaldoFondo(
@@ -129,23 +112,78 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _MiembroDesdeRow extends StatelessWidget {
-  const _MiembroDesdeRow();
+/// Solo se muestra contenido una vez que "Couple" existe DE VERDAD (2
+/// miembros) — mientras el código está pendiente de que la pareja lo
+/// canjee, no hay nada que mostrar acá (esa espera se maneja en la
+/// pantalla de Inicio, no en Perfil).
+class _PozoCompartidoSection extends StatelessWidget {
+  const _PozoCompartidoSection({required this.fundId, required this.myUid});
+
+  final String fundId;
+  final String myUid;
+
+  Future<void> _confirmarSalir(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('¿Salir del fondo compartido?'),
+        content: const Text(
+          'Se borra "Couple" para los dos: el historial de gastos y depósitos '
+          'compartidos deja de estar disponible. Esto no se puede deshacer. '
+          'Tu "Mi fondo" personal no se toca.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancelar')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogContext).colorScheme.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar == true && context.mounted) {
+      await context.read<FundService>().leaveSharedFund(uid: myUid, fundId: fundId);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final appUser = context.watch<AppState>().appUser!;
-    return StreamBuilder(
-      stream: context.read<FundService>().streamFund(appUser.fondoCompartidoId),
+    final theme = Theme.of(context);
+    return StreamBuilder<Fund?>(
+      stream: context.read<FundService>().streamFund(fundId),
       builder: (context, snapshot) {
-        final fecha = snapshot.data?.fechaCreacion;
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        final fund = snapshot.data;
+        if (fund == null || fund.members.length < 2) return const SizedBox.shrink();
+
+        final partner = fund.partnerName(myUid);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Miembro desde', style: Theme.of(context).textTheme.bodyMedium),
-            Text(
-              fecha == null ? '—' : DateFormat('MMMM yyyy', 'es').format(fecha),
-              style: Theme.of(context).textTheme.titleMedium,
+            Text('Pozo compartido', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            if (partner != null) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Compartiendo con', style: theme.textTheme.bodyMedium),
+                  Text(partner, style: theme.textTheme.titleMedium),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Miembro desde', style: theme.textTheme.bodyMedium),
+                Text(DateFormat('MMMM yyyy', 'es').format(fund.fechaCreacion), style: theme.textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
+              onPressed: () => _confirmarSalir(context),
+              child: const Text('Salir del fondo compartido'),
             ),
           ],
         );

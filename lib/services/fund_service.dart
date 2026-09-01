@@ -39,6 +39,20 @@ class FundService {
         .map((d) => d.exists ? Fund.fromDoc(d) : null);
   }
 
+  /// Sale del fondo compartido: borra el fondo entero (para los dos
+  /// miembros, no solo para quien sale — ver firebase/firestore.rules) y
+  /// limpia la propia reserva. La próxima vez que cualquiera de los dos
+  /// genere/canjee un código, arranca un fondo "Couple" nuevo y vacío.
+  /// No borra las transacciones/categorías (subcolecciones) para no
+  /// necesitar Cloud Functions; quedan huérfanas pero inaccesibles (las
+  /// reglas ya no reconocen a nadie como miembro de un fondo borrado).
+  Future<void> leaveSharedFund({required String uid, required String fundId}) async {
+    final batch = _db.batch();
+    batch.delete(_db.collection('funds').doc(fundId));
+    batch.update(_db.collection('users').doc(uid), {'fondoCompartidoId': null});
+    await batch.commit();
+  }
+
   // ---------------- Transacciones ----------------
 
   CollectionReference<Map<String, dynamic>> _transactions(String fundId) =>

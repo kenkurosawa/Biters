@@ -43,7 +43,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       body: FundGate(
         fundId: fundId,
         emptyState: (_) => const Center(child: Text('Todavía no armaste tu fondo compartido "Couple".')),
-        builder: (_) => SafeArea(
+        builder: (_, _) => SafeArea(
               child: Column(
                 children: [
                   SizedBox(

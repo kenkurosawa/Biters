@@ -33,7 +33,10 @@ class InviteService {
 
   /// Genera (o reutiliza) el código de invitación del fondo compartido del
   /// usuario. La primera vez, reserva un fondoCompartidoId en su perfil.
-  Future<GeneratedInvite> generateInvite(String uid) async {
+  /// [nombre] queda guardado en el invite para que, al canjearse, el fondo
+  /// pueda mostrar con quién se está compartiendo sin tener que leer el
+  /// documento privado del otro usuario.
+  Future<GeneratedInvite> generateInvite(String uid, {required String nombre}) async {
     final userRef = _db.collection('users').doc(uid);
     final userSnap = await userRef.get();
     String? fundId = userSnap.data()?['fondoCompartidoId'] as String?;
@@ -54,6 +57,7 @@ class InviteService {
         await _db.collection('invites').doc(code).set({
           'fundIdDestino': fundId,
           'creadoPor': uid,
+          'creadoPorNombre': nombre,
           'expiresAt': Timestamp.fromDate(expiresAt),
           'used': false,
           'usedBy': null,
@@ -71,8 +75,14 @@ class InviteService {
   String _randomCode() => (100000 + _rng.nextInt(900000)).toString();
 
   /// Canjea un código: crea el fondo compartido (si hace falta), vincula al
-  /// que se une, y marca el invite como usado. Todo atómico.
-  Future<String> redeemInvite({required String codigo, required String joinerUid}) async {
+  /// que se une, y marca el invite como usado. Todo atómico. [joinerNombre]
+  /// se guarda junto al nombre del creador (ya en el invite) para que el
+  /// fondo pueda mostrar con quién se está compartiendo.
+  Future<String> redeemInvite({
+    required String codigo,
+    required String joinerUid,
+    required String joinerNombre,
+  }) async {
     final inviteRef = _db.collection('invites').doc(codigo);
 
     return _db.runTransaction<String>((tx) async {
@@ -83,6 +93,7 @@ class InviteService {
       final used = data['used'] as bool? ?? true;
       final expiresAt = (data['expiresAt'] as Timestamp).toDate();
       final creadoPor = data['creadoPor'] as String;
+      final creadoPorNombre = data['creadoPorNombre'] as String? ?? 'Tu pareja';
       final fundId = data['fundIdDestino'] as String;
 
       if (used) throw const InviteException(InviteFailure.used);
@@ -102,6 +113,7 @@ class InviteService {
       tx.set(fundRef, {
         'tipo': 'compartido',
         'members': [creadoPor, joinerUid],
+        'memberNames': {creadoPor: creadoPorNombre, joinerUid: joinerNombre},
         'fechaCreacion': FieldValue.serverTimestamp(),
         'creadoConCodigo': codigo,
       });

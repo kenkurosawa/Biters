@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../services/invite_service.dart';
 import '../../state/app_state.dart';
+import '../../theme/colors.dart';
 
 /// Pantalla 14 del PDF: generar código de invitación de 6 dígitos.
 class InviteScreen extends StatefulWidget {
@@ -29,8 +30,10 @@ class _InviteScreenState extends State<InviteScreen> {
       _error = null;
     });
     try {
-      final uid = context.read<AppState>().firebaseUser!.uid;
-      final invite = await context.read<InviteService>().generateInvite(uid);
+      final appState = context.read<AppState>();
+      final uid = appState.firebaseUser!.uid;
+      final nombre = appState.appUser?.nombre ?? '';
+      final invite = await context.read<InviteService>().generateInvite(uid, nombre: nombre);
       if (mounted) setState(() => _invite = invite);
     } catch (_) {
       if (mounted) setState(() => _error = 'No pudimos generar el código. Probá de nuevo.');
@@ -84,15 +87,23 @@ class _InviteScreenState extends State<InviteScreen> {
                           children: [
                             for (final digit in _invite!.codigo.split(''))
                               Container(
-                                width: 44,
-                                height: 56,
+                                width: 46,
+                                height: 58,
                                 margin: const EdgeInsets.symmetric(horizontal: 4),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: theme.cardColor,
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: Text(digit, style: theme.textTheme.headlineMedium),
+                                child: Text(
+                                  digit,
+                                  style: const TextStyle(
+                                    fontFamily: 'SpaceGrotesk',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 24,
+                                    color: BitersColors.ink,
+                                  ),
+                                ),
                               ),
                           ],
                         ),

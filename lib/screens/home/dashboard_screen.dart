@@ -58,7 +58,11 @@ class DashboardScreen extends StatelessWidget {
                 child: FundGate(
                   fundId: fundId,
                   emptyState: (_) => _SinFondoCompartido(onInvitar: () => context.push('/invitar')),
-                  builder: (_) => _FundContent(fundId: fundId!, esNosotros: esNosotros),
+                  builder: (_, fund) => _FundContent(
+                    fundId: fundId!,
+                    esNosotros: esNosotros,
+                    partnerName: esNosotros ? fund.partnerName(appUser.uid) : null,
+                  ),
                 ),
               ),
             ],
@@ -79,10 +83,11 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _FundContent extends StatelessWidget {
-  const _FundContent({required this.fundId, required this.esNosotros});
+  const _FundContent({required this.fundId, required this.esNosotros, this.partnerName});
 
   final String fundId;
   final bool esNosotros;
+  final String? partnerName;
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +129,19 @@ class _FundContent extends StatelessWidget {
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
+              if (partnerName != null) ...[
+                Row(
+                  children: [
+                    Icon(Icons.handshake_rounded, size: 16, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Compartiendo con $partnerName',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
               BalanceCard(
                 saldoDisponible: saldo,
                 totalPositivo: totalPositivo,

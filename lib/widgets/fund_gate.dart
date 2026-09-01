@@ -18,7 +18,7 @@ class FundGate extends StatelessWidget {
   });
 
   final String? fundId;
-  final WidgetBuilder builder;
+  final Widget Function(BuildContext context, Fund fund) builder;
   final WidgetBuilder emptyState;
 
   @override
@@ -32,8 +32,9 @@ class FundGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.data == null) return emptyState(context);
-        return builder(context);
+        final fund = snapshot.data;
+        if (fund == null) return emptyState(context);
+        return builder(context, fund);
       },
     );
   }

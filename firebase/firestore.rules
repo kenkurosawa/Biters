@@ -90,9 +90,17 @@ service cloud.firestore {
         && request.resource.data.creadoConCodigo is string
         && isValidSharedFundCreation(fundId, request.resource.data);
 
-      // Sin edición de miembros ni borrado en v1 (no hay flujo de "salir del fondo").
+      // Sin edición de miembros: no se puede "expulsar" a nadie ni cambiar
+      // quién comparte el fondo salvo por el canje de invite de arriba.
       allow update: if false;
-      allow delete: if false;
+
+      // "Salir del fondo compartido": cualquiera de los dos miembros puede
+      // borrar el fondo compartido por completo (no hay una noción de
+      // "salir y que el otro se quede con todo" — ver docs/MODELO_DE_DATOS.md).
+      // El fondo personal jamás se puede borrar (isFundMember también es
+      // cierto para el propio fondo personal, por eso se exige tipo
+      // 'compartido' explícitamente acá).
+      allow delete: if isFundMember(fundId) && resource.data.tipo == 'compartido';
 
       // ---------- funds/{fundId}/transactions/{transactionId} ----------
       match /transactions/{transactionId} {
