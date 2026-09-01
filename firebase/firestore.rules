@@ -33,6 +33,21 @@ service cloud.firestore {
       return cat is string && cat.size() > 0 && cat.size() <= 60;
     }
 
+    // Valida la creación de un fondo compartido contra el invite que se
+    // está canjeando en la misma transacción (ver InviteService.redeemInvite
+    // en el cliente). request.resource.data.creadoConCodigo es el código.
+    function isValidSharedFundCreation(fundId, data) {
+      let invite = get(/databases/$(database)/documents/invites/$(data.creadoConCodigo)).data;
+      return data.members is list
+        && data.members.size() == 2
+        && request.auth.uid in data.members
+        && invite.used == false
+        && invite.expiresAt > request.time
+        && invite.fundIdDestino == fundId
+        && invite.creadoPor in data.members
+        && request.auth.uid != invite.creadoPor;
+    }
+
     // ---------- users/{uid} ----------
     // Cada usuario solo puede leer/escribir su propio documento.
     // El nombre visible para la pareja se desnormaliza en cada transacción
@@ -59,16 +74,8 @@ service cloud.firestore {
       // verifica ese invite server-side, no confía en nada que mande el cliente.
       allow create: if isSignedIn()
         && request.resource.data.tipo == 'compartido'
-        && request.resource.data.members is list
-        && request.resource.data.members.size() == 2
-        && request.auth.uid in request.resource.data.members
         && request.resource.data.creadoConCodigo is string
-        && let invite = get(/databases/$(database)/documents/invites/$(request.resource.data.creadoConCodigo)).data
-        && invite.used == false
-        && invite.expiresAt > request.time
-        && invite.fundIdDestino == fundId
-        && invite.creadoPor in request.resource.data.members
-        && request.auth.uid != invite.creadoPor;
+        && isValidSharedFundCreation(fundId, request.resource.data);
 
       // Sin edición de miembros ni borrado en v1 (no hay flujo de "salir del fondo").
       allow update: if false;
