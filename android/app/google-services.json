@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "875009748612",
+    "project_id": "biters-3f12e",
+    "storage_bucket": "biters-3f12e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:875009748612:android:568ed1adadf185d2575cd1",
+        "android_client_info": {
+          "package_name": "com.biters.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCe4vf5Gor0dBtQgcWwe8bniZzXxZ9lMZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

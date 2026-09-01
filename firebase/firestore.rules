@@ -1,0 +1,147 @@
+rules_version = '2';
+
+// Reglas de Firestore para Biters.
+// Filosofía: denegar todo por defecto, habilitar explícitamente solo lo necesario.
+// Nada de esto depende de "ocultar" el código cliente (que es público en GitHub) —
+// la seguridad real vive acá.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function fund(fundId) {
+      return get(/databases/$(database)/documents/funds/$(fundId)).data;
+    }
+
+    function isFundMember(fundId) {
+      return isSignedIn() && request.auth.uid in fund(fundId).members;
+    }
+
+    function isValidMonto(monto) {
+      return monto is number && monto > 0 && monto <= 500000000;
+    }
+
+    function isValidDescripcion(desc) {
+      return desc is string && desc.size() <= 140;
+    }
+
+    function isValidCategoria(cat) {
+      return cat is string && cat.size() > 0 && cat.size() <= 60;
+    }
+
+    // ---------- users/{uid} ----------
+    // Cada usuario solo puede leer/escribir su propio documento.
+    // El nombre visible para la pareja se desnormaliza en cada transacción
+    // (registradoPorNombre) precisamente para no tener que abrir esta colección
+    // a otros usuarios.
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- funds/{fundId} ----------
+    match /funds/{fundId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.members;
+
+      // Caso A: fondo personal, creado automáticamente al verificar el email.
+      allow create: if isSignedIn()
+        && request.resource.data.tipo == 'personal'
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 1
+        && request.resource.data.members[0] == request.auth.uid;
+
+      // Caso B: fondo compartido, creado únicamente como parte del canje
+      // atómico y válido de un código de invitación (ver invites/{code} abajo).
+      // El campo creadoConCodigo referencia el invite consumido; la regla
+      // verifica ese invite server-side, no confía en nada que mande el cliente.
+      allow create: if isSignedIn()
+        && request.resource.data.tipo == 'compartido'
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.creadoConCodigo is string
+        && let invite = get(/databases/$(database)/documents/invites/$(request.resource.data.creadoConCodigo)).data
+        && invite.used == false
+        && invite.expiresAt > request.time
+        && invite.fundIdDestino == fundId
+        && invite.creadoPor in request.resource.data.members
+        && request.auth.uid != invite.creadoPor;
+
+      // Sin edición de miembros ni borrado en v1 (no hay flujo de "salir del fondo").
+      allow update: if false;
+      allow delete: if false;
+
+      // ---------- funds/{fundId}/transactions/{transactionId} ----------
+      match /transactions/{transactionId} {
+        allow read: if isFundMember(fundId);
+
+        allow create: if isFundMember(fundId)
+          && request.resource.data.tipo in ['gasto', 'ingreso', 'deposito']
+          && isValidMonto(request.resource.data.monto)
+          && isValidDescripcion(request.resource.data.descripcion)
+          && isValidCategoria(request.resource.data.categoria)
+          && request.resource.data.registradoPor == request.auth.uid
+          && request.resource.data.mesReferencia is string
+          && request.resource.data.fecha is timestamp
+          // "ingreso" solo existe en el fondo personal
+          && (request.resource.data.tipo != 'ingreso' || fund(fundId).tipo == 'personal')
+          // modo solo aplica a gastos, y solo puede ser rapido/detallado
+          && (request.resource.data.tipo != 'gasto' || request.resource.data.modo in ['rapido', 'detallado'])
+          // depositante (si viene) debe ser miembro del fondo
+          && (!('depositante' in request.resource.data) || request.resource.data.depositante in fund(fundId).members);
+
+        allow update: if isFundMember(fundId)
+          // no se puede reasignar la autoría ni el tipo de movimiento al editar
+          && request.resource.data.registradoPor == resource.data.registradoPor
+          && request.resource.data.tipo == resource.data.tipo
+          && isValidMonto(request.resource.data.monto)
+          && isValidDescripcion(request.resource.data.descripcion)
+          && isValidCategoria(request.resource.data.categoria)
+          && (request.resource.data.tipo != 'gasto' || request.resource.data.modo in ['rapido', 'detallado']);
+
+        allow delete: if isFundMember(fundId);
+      }
+
+      // ---------- funds/{fundId}/categories/config ----------
+      match /categories/{doc} {
+        allow read, write: if isFundMember(fundId);
+      }
+    }
+
+    // ---------- invites/{codigoDe6Digitos} ----------
+    match /invites/{code} {
+      // Nunca se puede listar/consultar la colección completa: solo get() puntual
+      // por el código exacto (evita enumerar códigos vigentes).
+      allow list: if false;
+
+      // Solo se puede leer un invite si no está vencido y no fue usado.
+      allow get: if isSignedIn()
+        && resource.data.used == false
+        && resource.data.expiresAt > request.time;
+
+      // Solo el dueño del fondo puede generar códigos, y siempre nace "no usado".
+      allow create: if isSignedIn()
+        && request.resource.data.creadoPor == request.auth.uid
+        && request.resource.data.used == false
+        && request.resource.data.usedBy == null
+        && request.resource.data.expiresAt is timestamp;
+
+      // Canje: pasar de used:false a used:true, solo si sigue vigente,
+      // y quien canjea no es quien lo creó.
+      allow update: if isSignedIn()
+        && resource.data.used == false
+        && resource.data.expiresAt > request.time
+        && request.auth.uid != resource.data.creadoPor
+        && request.resource.data.used == true
+        && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.creadoPor == resource.data.creadoPor
+        && request.resource.data.fundIdDestino == resource.data.fundIdDestino
+        && request.resource.data.expiresAt == resource.data.expiresAt;
+
+      allow delete: if false;
+    }
+  }
+}

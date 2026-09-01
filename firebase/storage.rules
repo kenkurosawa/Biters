@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Reglas de Storage para Biters: solo fotos de perfil (avatars).
+// Denegar todo por defecto, habilitar explícitamente solo la carpeta propia.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /avatars/{uid}/{fileName} {
+      // Cualquier usuario autenticado puede ver avatares (se muestran entre
+      // la pareja en Inicio/Perfil).
+      allow read: if request.auth != null;
+
+      // Solo el dueño puede escribir en su propia carpeta, y solo imágenes
+      // razonables: jpg/png/webp, máximo 5 MB.
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Cualquier otra ruta: denegada.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
