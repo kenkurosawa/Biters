@@ -180,6 +180,11 @@ class _SinFondoCompartido extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           ElevatedButton(onPressed: onInvitar, child: const Text('Invitar a tu pareja')),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => context.push('/unirme'),
+            child: const Text('Ya tengo un código'),
+          ),
         ],
       ),
     );

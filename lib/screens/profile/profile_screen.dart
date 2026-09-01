@@ -92,6 +92,13 @@ class ProfileScreen extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/invitar'),
             ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.qr_code_2_rounded, color: theme.colorScheme.primary),
+              title: const Text('Unirme a un fondo'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/unirme'),
+            ),
             const SizedBox(height: 20),
             Text('Mis fondos', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
