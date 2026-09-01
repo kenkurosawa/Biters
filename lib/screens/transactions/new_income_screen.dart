@@ -68,7 +68,7 @@ class _NewIncomeScreenState extends State<NewIncomeScreen> {
     final nombre = appState.appUser?.nombre ?? '';
     if (fundId == null || uid == null) return;
 
-    final monto = double.tryParse(_montoCtrl.text.replaceAll(',', '.')) ?? 0;
+    final monto = AmountField.parse(_montoCtrl.text);
     if (monto <= 0 || _categoria == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Completá el monto y la categoría.')),

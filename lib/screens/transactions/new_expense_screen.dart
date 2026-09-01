@@ -76,7 +76,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
 
     final double monto = _modo == ExpenseMode.detallado
         ? _totalItems
-        : (double.tryParse(_montoCtrl.text.replaceAll(',', '.')) ?? 0);
+        : AmountField.parse(_montoCtrl.text);
 
     if (monto <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -350,6 +350,7 @@ class _ItemDialogState extends State<_ItemDialog> {
           TextField(
             controller: _montoCtrl,
             keyboardType: TextInputType.number,
+            inputFormatters: [AmountField.thousandsFormatter()],
             decoration: const InputDecoration(labelText: 'Monto', prefixText: 'Gs. '),
           ),
         ],
@@ -358,7 +359,7 @@ class _ItemDialogState extends State<_ItemDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         FilledButton(
           onPressed: () {
-            final monto = double.tryParse(_montoCtrl.text) ?? 0;
+            final monto = AmountField.parse(_montoCtrl.text);
             if (_subCtrl.text.trim().isEmpty || monto <= 0) return;
             Navigator.pop(context, TransactionItem(subcategoria: _subCtrl.text.trim(), monto: monto));
           },
