@@ -40,7 +40,7 @@ class DashboardScreen extends StatelessWidget {
                         Text('Hola, ${appUser.nombre.split(' ').first} 👋',
                             style: Theme.of(context).textTheme.headlineMedium),
                         Text(
-                          '${_mesActual()} · ${esNosotros ? 'Nosotros' : 'Solo vos lo ves'}',
+                          '${_mesActual()} · ${esNosotros ? 'Couple' : 'Privado'}',
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ],
@@ -89,6 +89,14 @@ class _FundContent extends StatelessWidget {
     return StreamBuilder<List<AppTransaction>>(
       stream: fundService.streamTransactions(fundId, mesReferencia: mesReferencia),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'No se pudo cargar. Probá de nuevo en un momento.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          );
+        }
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -163,7 +171,7 @@ class _SinFondoCompartido extends StatelessWidget {
           Text('Todavía no armaste tu fondo\ncompartido', textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(
-            'Invitá a tu pareja con un código de 6 dígitos para empezar a compartir "Nosotros".',
+            'Invitá a tu pareja con un código de 6 dígitos para empezar a compartir "Couple".',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium,
           ),

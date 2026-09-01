@@ -97,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 8),
             _SaldoFondo(
               icon: Icons.handshake_rounded,
-              label: 'Nosotros',
+              label: 'Couple',
               fundId: appUser.fondoCompartidoId,
             ),
             _SaldoFondo(

@@ -74,7 +74,7 @@ class _InviteScreenState extends State<InviteScreen> {
                         Icon(Icons.front_hand_rounded, size: 56, color: theme.colorScheme.primary),
                         const SizedBox(height: 16),
                         Text(
-                          'Compartí este código con tu pareja\npara que se una a "Nosotros"',
+                          'Compartí este código con tu pareja\npara que se una a "Couple"',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium,
                         ),

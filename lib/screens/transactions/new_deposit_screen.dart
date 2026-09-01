@@ -5,6 +5,7 @@ import '../../models/app_transaction.dart';
 import '../../models/fund.dart';
 import '../../services/fund_service.dart';
 import '../../state/app_state.dart';
+import '../../widgets/amount_field.dart';
 
 /// Pantalla 9 del PDF: "Nuevo depósito".
 class NewDepositScreen extends StatefulWidget {
@@ -96,15 +97,7 @@ class _NewDepositScreenState extends State<NewDepositScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: TextField(
-                  controller: _montoCtrl,
-                  textAlign: TextAlign.center,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                  style: theme.textTheme.displayLarge?.copyWith(color: theme.colorScheme.secondary),
-                  decoration: const InputDecoration(border: InputBorder.none, prefixText: 'Gs. ', hintText: '0'),
-                ),
-              ),
+              AmountField(controller: _montoCtrl),
               Center(child: Text('Monto depositado', style: theme.textTheme.labelSmall)),
               const SizedBox(height: 20),
               if (!esPersonal && appState.activeFundId != null) ...[

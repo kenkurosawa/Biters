@@ -5,6 +5,7 @@ import '../../models/app_transaction.dart';
 import '../../models/category.dart';
 import '../../services/fund_service.dart';
 import '../../state/app_state.dart';
+import '../../widgets/amount_field.dart';
 import '../../widgets/category_chip_selector.dart';
 
 /// Pantallas 6 y 7 del PDF: "Nuevo gasto" en modo Rápido o Detallado.
@@ -141,19 +142,7 @@ class _NewExpenseScreenState extends State<NewExpenseScreen> {
               _ModoToggle(modo: _modo, onChanged: (m) => setState(() => _modo = m)),
               const SizedBox(height: 24),
               if (_modo == ExpenseMode.rapido) ...[
-                Center(
-                  child: TextField(
-                    controller: _montoCtrl,
-                    textAlign: TextAlign.center,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                    style: theme.textTheme.displayLarge,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      prefixText: 'Gs. ',
-                      hintText: '0',
-                    ),
-                  ),
-                ),
+                AmountField(controller: _montoCtrl),
                 Center(child: Text('Monto del gasto', style: theme.textTheme.labelSmall)),
                 const SizedBox(height: 20),
               ] else ...[

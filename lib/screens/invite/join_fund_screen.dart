@@ -108,7 +108,7 @@ class _JoinFundScreenState extends State<JoinFundScreen> {
               ],
               const SizedBox(height: 16),
               Text(
-                'Al unirte vas a empezar a ver y compartir el fondo "Nosotros" '
+                'Al unirte vas a empezar a ver y compartir el fondo "Couple" '
                 'con tu pareja, junto a tu "Mi fondo" personal que seguís teniendo aparte.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall,

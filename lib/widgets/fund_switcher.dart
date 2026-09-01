@@ -20,7 +20,7 @@ class FundSwitcher extends StatelessWidget {
           icon: Icons.handshake_rounded,
           color: BitersColors.fundoNosotros,
           selected: selection == FundSelection.nosotros,
-          tooltip: 'Nosotros',
+          tooltip: 'Couple',
           onTap: () => onChanged(FundSelection.nosotros),
         ),
         const SizedBox(width: 8),

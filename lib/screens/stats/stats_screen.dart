@@ -40,6 +40,14 @@ class _StatsScreenState extends State<StatsScreen> {
               child: StreamBuilder<List<AppTransaction>>(
                 stream: context.read<FundService>().streamTransactions(fundId, mesReferencia: mesReferencia),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'No se pudo cargar. Probá de nuevo en un momento.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    );
+                  }
                   if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                   final gastos = snapshot.data!.where((t) => t.tipo == TransactionType.gasto).toList();
                   final totalGastado = gastos.fold(0.0, (s, t) => s + t.monto);

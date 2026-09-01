@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
+import '../theme/colors.dart';
 
 /// Shell compartido con la barra inferior (Inicio / Historial / Stats /
 /// Perfil) y el botón '+' flotante de Inicio (docs/Biters_Diseno_App.pdf,
@@ -58,12 +59,20 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final hayFondoActivo = appState.activeFundId != null;
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: navigationShell,
-      floatingActionButton: navigationShell.currentIndex == 0
+      // Solo en Inicio, y solo si hay un fondo activo donde cargar el
+      // movimiento (si todavía no armaste "Couple", no tiene sentido
+      // ofrecer cargar un gasto ahí).
+      floatingActionButton: (navigationShell.currentIndex == 0 && hayFondoActivo)
           ? FloatingActionButton(
-              backgroundColor: Theme.of(context).colorScheme.onSurface,
-              foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+              shape: const CircleBorder(),
+              backgroundColor: esOscuro ? BitersColors.coral : BitersColors.ink,
+              foregroundColor: BitersColors.cream,
               onPressed: () => _abrirNuevoMovimiento(context),
               child: const Icon(Icons.add),
             )

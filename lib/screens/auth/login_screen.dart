@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
-import '../../theme/colors.dart';
+import '../../widgets/biters_logo.dart';
 
 enum _AuthMode { iniciarSesion, crearCuenta }
 
@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 24),
-                const _BitersLogo(),
+                const Center(child: BitersLogo()),
                 const SizedBox(height: 12),
                 Text(
                   'Biters',
@@ -219,39 +219,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-class _BitersLogo extends StatelessWidget {
-  const _BitersLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        width: 72,
-        height: 72,
-        child: CustomPaint(painter: _BiteLogoPainter()),
-      ),
-    );
-  }
-}
-
-/// Círculo coral con un "mordisco" (círculo del color de fondo superpuesto),
-/// el logo de Biters (docs/Biters_Diseno_App.pdf, página 2).
-class _BiteLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = BitersColors.coral;
-    final center = Offset(size.width / 2, size.height / 2);
-    canvas.drawCircle(center, size.width / 2, paint);
-
-    final bitePaint = Paint()..color = BitersColors.cream;
-    final biteCenter = Offset(size.width * 0.78, size.height * 0.30);
-    canvas.drawCircle(biteCenter, size.width * 0.30, bitePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ModeToggle extends StatelessWidget {

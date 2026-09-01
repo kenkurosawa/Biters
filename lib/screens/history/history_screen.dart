@@ -67,6 +67,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: StreamBuilder<List<AppTransaction>>(
                       stream: context.read<FundService>().streamTransactions(fundId, mesReferencia: mesReferencia),
                       builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              'No se pudo cargar. Probá de nuevo en un momento.',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          );
+                        }
                         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                         final txs = snapshot.data!;
                         double depositado = 0, gastado = 0;
