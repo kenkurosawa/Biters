@@ -16,12 +16,22 @@ keytool -genkeypair -v \
   -alias biters \
   -keyalg RSA -keysize 2048 -validity 10000 \
   -storepass "<STORE_PASSWORD>" \
-  -keypass "<KEY_PASSWORD>"
+  -keypass "<KEY_PASSWORD>" \
+  -J-Dkeystore.pkcs12.legacy=true
 ```
 
 Va a pedir algunos datos (nombre, organización, país) — se pueden dejar
 genéricos, no afectan la seguridad. El archivo resultante (`biters-release.jks`)
 se guarda **fuera del control de versiones** (está en `.gitignore`).
+
+> **`-J-Dkeystore.pkcs12.legacy=true` es obligatorio.** Sin este flag, JDKs
+> recientes (17+) generan el PKCS12 con un cifrado más nuevo que el
+> parser de firma que usa Android Gradle Plugin en los runners de GitHub
+> Actions no puede leer — el build falla en `:app:packageRelease` con
+> `KeytoolException: ... Tag number over 30 is not supported`. Con el flag,
+> el keystore queda en el formato PKCS12 "legacy" compatible con todo.
+> (Nos pasó en el primer intento de este proyecto: quedó documentado acá
+> para no repetir el error si algún día hay que regenerar el keystore.)
 
 ## 2. Configurar `android/key.properties` (local, nunca se commitea)
 
