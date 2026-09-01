@@ -26,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   int _failedAttempts = 0;
   DateTime? _cooldownUntil;
+  bool _passwordVisible = false;
 
   @override
   void dispose() {
@@ -175,10 +176,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 6),
                 TextFormField(
                   controller: _passwordCtrl,
-                  obscureText: true,
+                  obscureText: !_passwordVisible,
                   validator: (v) => (v == null || v.length < 8)
                       ? 'Mínimo 8 caracteres'
                       : null,
+                  decoration: InputDecoration(
+                    suffixIcon: IconButton(
+                      icon: Icon(_passwordVisible ? Icons.visibility_off_rounded : Icons.visibility_rounded),
+                      onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                    ),
+                  ),
                 ),
                 if (esLogin) ...[
                   Align(

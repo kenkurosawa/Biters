@@ -5,6 +5,7 @@ import '../../services/fund_service.dart';
 import '../../state/app_state.dart';
 import '../../utils/category_icons.dart';
 import '../../utils/currency.dart';
+import '../../widgets/fund_gate.dart';
 import '../../widgets/fund_switcher.dart';
 
 /// Pantallas 12 y 13 del PDF: Estadísticas, vista General y Por subcategoría.
@@ -34,11 +35,12 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
         ],
       ),
-      body: fundId == null
-          ? const Center(child: Text('Todavía no tenés un fondo compartido.'))
-          : SafeArea(
+      body: FundGate(
+        fundId: fundId,
+        emptyState: (_) => const Center(child: Text('Todavía no armaste tu fondo compartido "Couple".')),
+        builder: (_) => SafeArea(
               child: StreamBuilder<List<AppTransaction>>(
-                stream: context.read<FundService>().streamTransactions(fundId, mesReferencia: mesReferencia),
+                stream: context.read<FundService>().streamTransactions(fundId!, mesReferencia: mesReferencia),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Center(
@@ -91,6 +93,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 },
               ),
             ),
+      ),
     );
   }
 }

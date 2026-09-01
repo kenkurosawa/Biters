@@ -6,6 +6,7 @@ import '../../models/app_transaction.dart';
 import '../../services/fund_service.dart';
 import '../../state/app_state.dart';
 import '../../utils/currency.dart';
+import '../../widgets/fund_gate.dart';
 import '../../widgets/fund_switcher.dart';
 import '../../widgets/transaction_tile.dart';
 
@@ -39,9 +40,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      body: fundId == null
-          ? const Center(child: Text('Todavía no tenés un fondo compartido.'))
-          : SafeArea(
+      body: FundGate(
+        fundId: fundId,
+        emptyState: (_) => const Center(child: Text('Todavía no armaste tu fondo compartido "Couple".')),
+        builder: (_) => SafeArea(
               child: Column(
                 children: [
                   SizedBox(
@@ -65,7 +67,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: StreamBuilder<List<AppTransaction>>(
-                      stream: context.read<FundService>().streamTransactions(fundId, mesReferencia: mesReferencia),
+                      stream: context.read<FundService>().streamTransactions(fundId!, mesReferencia: mesReferencia),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
                           return Center(
@@ -128,6 +130,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 }

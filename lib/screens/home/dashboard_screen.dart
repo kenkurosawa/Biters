@@ -6,6 +6,7 @@ import '../../services/fund_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/colors.dart';
 import '../../widgets/balance_card.dart';
+import '../../widgets/fund_gate.dart';
 import '../../widgets/fund_switcher.dart';
 import '../../widgets/transaction_tile.dart';
 
@@ -54,9 +55,11 @@ class DashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: fundId == null
-                    ? _SinFondoCompartido(onInvitar: () => context.push('/invitar'))
-                    : _FundContent(fundId: fundId, esNosotros: esNosotros),
+                child: FundGate(
+                  fundId: fundId,
+                  emptyState: (_) => _SinFondoCompartido(onInvitar: () => context.push('/invitar')),
+                  builder: (_) => _FundContent(fundId: fundId!, esNosotros: esNosotros),
+                ),
               ),
             ],
           ),

@@ -17,8 +17,16 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/funds/$(fundId)).data;
     }
 
+    // exists() antes de get(): un fondo "compartido" puede estar reservado
+    // en users/{uid}.fondoCompartidoId (se asigna al generar el primer
+    // código de invitación) sin que el documento todavía exista — recién
+    // se crea cuando el invite se canjea. Sin este chequeo, get().data
+    // sobre un documento inexistente rompe la evaluación de la regla
+    // (deniega con error en vez de simplemente no ser miembro).
     function isFundMember(fundId) {
-      return isSignedIn() && request.auth.uid in fund(fundId).members;
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/funds/$(fundId))
+        && request.auth.uid in fund(fundId).members;
     }
 
     function isValidMonto(monto) {
@@ -59,7 +67,12 @@ service cloud.firestore {
 
     // ---------- funds/{fundId} ----------
     match /funds/{fundId} {
-      allow read: if isSignedIn() && request.auth.uid in resource.data.members;
+      // resource == null cuando el fondo todavía no existe (reservado pero
+      // no creado) — se permite leer "no existe" (el cliente lo usa para
+      // saber que hay que mostrar el estado vacío), pero uno ya creado
+      // solo lo leen sus miembros.
+      allow read: if isSignedIn()
+        && (resource == null || request.auth.uid in resource.data.members);
 
       // Caso A: fondo personal, creado automáticamente al verificar el email.
       allow create: if isSignedIn()
@@ -125,9 +138,14 @@ service cloud.firestore {
       allow list: if false;
 
       // Solo se puede leer un invite si no está vencido y no fue usado.
+      // resource == null cuando el código no existe — se permite leer
+      // "no existe" (así el cliente puede generar uno nuevo sin que la
+      // regla explote intentando leer resource.data de un doc inexistente,
+      // y para que "Unirme a un fondo" pueda distinguir código inválido
+      // de código vencido/usado).
       allow get: if isSignedIn()
-        && resource.data.used == false
-        && resource.data.expiresAt > request.time;
+        && (resource == null
+          || (resource.data.used == false && resource.data.expiresAt > request.time));
 
       // Solo el dueño del fondo puede generar códigos, y siempre nace "no usado".
       allow create: if isSignedIn()

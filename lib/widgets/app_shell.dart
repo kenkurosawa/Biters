@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../models/fund.dart';
+import '../services/fund_service.dart';
 import '../state/app_state.dart';
 import '../theme/colors.dart';
 
@@ -60,21 +62,28 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final hayFondoActivo = appState.activeFundId != null;
+    final fundId = appState.activeFundId;
     final esOscuro = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: navigationShell,
-      // Solo en Inicio, y solo si hay un fondo activo donde cargar el
-      // movimiento (si todavía no armaste "Couple", no tiene sentido
-      // ofrecer cargar un gasto ahí).
-      floatingActionButton: (navigationShell.currentIndex == 0 && hayFondoActivo)
-          ? FloatingActionButton(
-              shape: const CircleBorder(),
-              backgroundColor: esOscuro ? BitersColors.coral : BitersColors.ink,
-              foregroundColor: BitersColors.cream,
-              onPressed: () => _abrirNuevoMovimiento(context),
-              child: const Icon(Icons.add),
+      // Solo en Inicio, y solo si el fondo activo REALMENTE existe (no
+      // alcanza con que fondoCompartidoId esté reservado en el perfil: el
+      // documento del fondo recién se crea cuando la pareja canjea el
+      // código — antes de eso no tiene sentido ofrecer cargar un gasto ahí).
+      floatingActionButton: (navigationShell.currentIndex == 0 && fundId != null)
+          ? StreamBuilder<Fund?>(
+              stream: context.read<FundService>().streamFund(fundId),
+              builder: (context, snapshot) {
+                if (snapshot.data == null) return const SizedBox.shrink();
+                return FloatingActionButton(
+                  shape: const CircleBorder(),
+                  backgroundColor: esOscuro ? BitersColors.coral : BitersColors.ink,
+                  foregroundColor: BitersColors.cream,
+                  onPressed: () => _abrirNuevoMovimiento(context),
+                  child: const Icon(Icons.add),
+                );
+              },
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(

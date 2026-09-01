@@ -43,25 +43,29 @@ class InviteService {
       await userRef.update({'fondoCompartidoId': fundId});
     }
 
-    String code = _randomCode();
-    for (var attempt = 0; attempt < 5; attempt++) {
-      final ref = _db.collection('invites').doc(code);
-      final existing = await ref.get();
-      if (!existing.exists) break;
-      code = _randomCode();
-    }
-
+    // No hace falta chequear de antemano si el código ya existe: con 900.000
+    // combinaciones posibles, una colisión es casi imposible, y si pasara,
+    // Firestore la trata como "update" (no "create") y la regla de
+    // seguridad la rechaza sola — alcanza con reintentar con otro código.
     final expiresAt = DateTime.now().add(const Duration(hours: 24));
-    await _db.collection('invites').doc(code).set({
-      'fundIdDestino': fundId,
-      'creadoPor': uid,
-      'expiresAt': Timestamp.fromDate(expiresAt),
-      'used': false,
-      'usedBy': null,
-      'fechaCreacion': FieldValue.serverTimestamp(),
-    });
-
-    return GeneratedInvite(codigo: code, expiresAt: expiresAt);
+    var code = _randomCode();
+    for (var attempt = 0; attempt < 5; attempt++) {
+      try {
+        await _db.collection('invites').doc(code).set({
+          'fundIdDestino': fundId,
+          'creadoPor': uid,
+          'expiresAt': Timestamp.fromDate(expiresAt),
+          'used': false,
+          'usedBy': null,
+          'fechaCreacion': FieldValue.serverTimestamp(),
+        });
+        return GeneratedInvite(codigo: code, expiresAt: expiresAt);
+      } on FirebaseException catch (e) {
+        if (e.code != 'permission-denied' || attempt == 4) rethrow;
+        code = _randomCode();
+      }
+    }
+    throw StateError('No se pudo generar un código único.');
   }
 
   String _randomCode() => (100000 + _rng.nextInt(900000)).toString();
